@@ -2,14 +2,14 @@
 
 Multiplatform projects support hierarchical source set structures.
 This means you can arrange a hierarchy of intermediate source sets for sharing the common code among some, but not all,
-[supported targets](multiplatform-dsl-reference.md#targets). Using intermediate source sets allows you to:
+[supported targets](multiplatform-dsl-reference.md#targets). Using intermediate source sets helps you to:
 
-* **Provide a specialized API for some targets**. For example, a library can put an additional Native-specific APIs in an 
-intermediate source set for Kotlin/Native targets but not for Kotlin/JVM ones
-* **Consume a specialized API for some targets**. Symmetrically to the previous point, if you want to benefit from a 
-richer API a Kotlin Multiplatform Library provides for some targets, you'll need to have a respective intermediate 
-source set
-* **Use platform-dependent libraries in your project**. For example, you can have access to iOS-specific dependencies,
+* Provide a specific API for some targets. For example, a library can add native-specific APIs in an
+  intermediate source set for Kotlin/Native targets but not for Kotlin/JVM ones.
+* Consume a specific API for some targets. For example, to benefit from a rich API that the Kotlin Multiplatform
+  library provides for some targets that form an intermediate source set.
+* Use platform-dependent libraries in your project. For example, you can access to iOS-specific dependencies from
+  the intermediate iOS source set.
 
 The Kotlin toolchain ensures that each source set has access only to the API that is available for all targets to which
 that source set compiles. This prevents cases like using a Windows-specific API and then compiling it to macOS,
@@ -17,7 +17,7 @@ resulting in linkage errors or undefined behavior at runtime.
 
 The recommended way to set up the source set hierarchy is to use the [default hierarchy template](#default-hierarchy-template).
 The template covers most popular cases. If you have a more advanced project, you can [configure it manually](#manual-configuration).
-It's a more low-level approach: it's more flexible, but requires more effort and knowledge. 
+It's a more low-level approach: it's more flexible but requires more effort and knowledge. 
 
 ## Default hierarchy template
 
@@ -113,10 +113,11 @@ kotlin {
 >
 {type="note"}
 
-### Adding source sets to the default hierarchy template
+### Additional configuration
 
-Using `dependsOn` calls from the [Manual Configuration](#manual-configuration) will cancel the default application of the
-hierarchy template for you project and provoke the following warning:
+You might need to make adjustments to the default hierarchy template. If you had previously introduced intermediate sources
+[manually](#manual-configuration) with `dependsOn` calls, it cancels the application of the default
+hierarchy template, and you get the following warning:
 
 ```none
 The Default Kotlin Hierarchy Template was not applied to '<project-name>':
@@ -130,100 +131,100 @@ to your gradle.properties
 Learn more about hierarchy templates: https://kotl.in/hierarchy-template
 ```
 
-The following few sections will discuss several popular cases where you might see this warning, and what you can do
+To solve this issue, configure your project by doing one of the following:
 
-#### Replacing your manual configuration with the Default Hierarchy Template
+* [Replace your manual configuration with the default hierarchy template](#replacing-manual-configuration)
+* [Add your source sets to the default hierarchy template](#adding-source-sets)
+* [Modify the source sets created by the default hierarchy template](#modifying-source-sets)
 
-**Case.** All added dependsOn-edges are covered by the Default Hierarchy Template. This can happen, for example, if 
-you're migrating previously existing project to 1.9.20 or if you have used some code snippets written before 1.9.20.
+#### Replacing manual configuration
 
-**Solution.** Remove all the manual dependsOn-edges (`dependsOn`-calls) and instantiation of the intermediate source sets
-(`by creating`-calls).
+**Case**. All your intermediate source sets are currently covered by the default hierarchy template.
 
-#### Creating additional source sets alongside Default Hierarchy Template
+**Solution**. Remove all manual `dependsOn()` calls and source sets with `by creating` constructions.
+To check the list of all default source sets, see the [full hierarchy template](#see-the-full-hierarchy-template).
 
-**Case.** You don't want to change the source sets created by the Default Hierarchy Template, but you do want to create
-a few additional source sets. For example, the Default Hierarchy Template doesn't provide a shared source set between JS
-and JVM, but you need that source set in your project.
+#### Adding source sets
 
-**Solution.** In such case, you can reapply the Default Hierarchy Template explicitly via calling `applyDefaultHierarchyTemplate()` 
-and configure any additional source sets as usual (refer to [Manual Configuration](#manual-configuration)).
+**Case**. You want to add source sets that the default hierarchy template doesn't provide yet,
+for example, between a macOS and a JVM target.
 
-Example:
+**Solution**:
 
-<tabs group="build-script">
-<tab title="Kotlin" group-key="kotlin">
+1. Reapply the template by explicitly calling `applyDefaultHierarchyTemplate()`.
+2. Configure additional source sets [manually](#manual-configuration) using `dependsOn()`:
 
-```kotlin
-kotlin {
-    jvm()
-    js { browser() }
-    iosArm64()
-    iosSimulatorArm64()
-
-    // Apply the default hierarchy again. It'll create, for example, the iosMain source set:
-    applyDefaultHierarchyTemplate()
-
-    sourceSets {
-        // Create an additional jsAndJvmMain source set:
-        val jsAndJvmMain by creating {
-            dependsOn(commonMain.get())
-        }
-
-        jsMain.get().dependsOn(jsAndJvmMain)
-        jvmMain.get().dependsOn(jsAndJvmMain)
-    }
-}
-```
-
-</tab>
-<tab title="Groovy" group-key="groovy">
-
-```groovy
-kotlin {
-    jvm()
-    js { browser() }
-    iosArm64()
-    iosSimulatorArm64()
-
-    // Apply the default hierarchy again. It'll create, for example, the iosMain source set:
-    applyDefaultHierarchyTemplate()
-
-    sourceSets {
-        // Create an additional jsAndJvmMain source set:
-        jsAndJvmMain {
-            dependsOn(commonMain)
-        }
-        jsMain {
-            dependsOn(jsAndJvmMain)
-        }
-        jvmMain {
-            dependsOn(jsAndJvmMain)
+    <tabs group="build-script">
+    <tab title="Kotlin" group-key="kotlin">
+    
+    ```kotlin
+    kotlin {
+        jvm()
+        macosArm64()
+        iosArm64()
+        iosSimulatorArm64()
+    
+        // Apply the default hierarchy again. It'll create, for example, the iosMain source set:
+        applyDefaultHierarchyTemplate()
+    
+        sourceSets {
+            // Create an additional jvmAndMacos source set:
+            val jvmAndMacos by creating {
+                dependsOn(commonMain.get())
+            }
+    
+            macosArm64Main.get().dependsOn(jvmAndMacos)
+            jvmMain.get().dependsOn(jvmAndMacos)
         }
     }
-}
-```
+    ```
+    
+    </tab>
+    <tab title="Groovy" group-key="groovy">
+    
+    ```groovy
+    kotlin {
+        jvm()
+        macosArm64()
+        iosArm64()
+        iosSimulatorArm64()
+    
+        // Apply the default hierarchy again. It'll create, for example, the iosMain source set:
+        applyDefaultHierarchyTemplate()
+    
+        sourceSets {
+            // Create an additional jvmAndMacos source set:
+            jvmAndMacos {
+                dependsOn(commonMain.get())
+            }
+            jvmAndMacos  {
+                dependsOn(macosArm64Main.get())
+            }
+            jvmAndMacos  {
+                dependsOn(jvmMain.get())
+            }
+        } 
+    }
+    ```
+    
+    </tab>
+    </tabs>
 
-</tab>
-</tabs>
+#### Modifying source sets
 
-It can be cumbersome to remove `dependsOn` relations that are automatically created by the `targetHierarchy.default()` call.
-In that case, use an entirely [manual configuration](#manual-configuration) instead of calling the default hierarchy.
+**Case**. You already have the source sets with the exact same names as those generated by the template but shared among
+different sets of targets in your project. For example, a `nativeMain` source set shared among not all the native 
+targets but only the desktop ones: `linuxX64`, `mingwX64`, and `macosX64`.
 
-#### Modifying the source sets created by the Default Hierarchy Template
+**Solution**. There's currently no way to modify the default `dependsOn` relations among the template's source sets.
+It's a technical limitation of the template. It's also important that the implementation and the meaning of source sets,
+for example, `nativeMain`, are the same in all projects.
 
-**Case.** You want to have a source set exactly with the same name as the one created by the Default Target Hierarchy,
-but shared for a different set of targets. For example, you want to have a `nativeMain` shared not for all native 
-targets, but only for the desktop ones: `linuxX64`, `mingwX64`, `macosX64`.
+However, you still can do one of the following:
 
-**Answer.** Unfortunately, as of Kotlin 1.9.20, there's no way to modify `dependsOn`-edges of the source sets created 
-by the Default Hierarchy Template. This is not only because of the technical limitations: it is beneficial for the 
-ecosystem to have a unified understanding of what `nativeMain` means. So, we'd kindly recommend you to try finding a 
-differently named source set for your purposes - either in the Default Hierarchy Template, or created manually.
-
-In the case you'd still prever to have `nativeMain` with the different sharing compared to the one created by the Default 
-Hierarchy Template, you can opt-out from the template entirely by adding `kotlin.mpp.applyDefaultHierarchyTemplate=false`.
-Of course, you will have to configure all other source sets manually as well. 
+  * Find different source sets for your purposes, either in the default hierarchy template or ones that have been manually created.
+  * Opt out of the template completely by adding `kotlin.mpp.applyDefaultHierarchyTemplate=false`
+    to your `gradle.properties` file and configure all source sets manually.
 
 > We're currently working on an API to create your own hierarchy templates. It will be useful for projects
 > whose hierarchy configurations are significantly different from the default template.

@@ -79,7 +79,7 @@ Both the `kotlinx.serialization` and SQLDelight libraries also require additiona
 
     sourceSets {
         targetHierarchy.default()
-
+    
         val commonMain by getting {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
