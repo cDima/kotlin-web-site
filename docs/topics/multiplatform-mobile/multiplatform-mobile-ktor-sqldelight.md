@@ -78,9 +78,8 @@ Both the `kotlinx.serialization` and SQLDelight libraries also require additiona
     val dateTimeVersion = "%dateTimeVersion%"
 
     sourceSets {
-        targetHierarchy.default()
     
-        val commonMain by getting {
+        commonMain {
             dependencies {
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
                 implementation("io.ktor:ktor-client-core:$ktorVersion")
@@ -90,13 +89,13 @@ Both the `kotlinx.serialization` and SQLDelight libraries also require additiona
                 implementation("org.jetbrains.kotlinx:kotlinx-datetime:$dateTimeVersion")
             }
         }
-        val androidMain by getting {
+        androidMain {
             dependencies {
                 implementation("io.ktor:ktor-client-android:$ktorVersion")
                 implementation("com.squareup.sqldelight:android-driver:$sqlDelightVersion")
             }
         }
-        val iosMain by getting {
+        iosMain {
             // ...
             dependencies {
                 implementation("io.ktor:ktor-client-darwin:$ktorVersion")
