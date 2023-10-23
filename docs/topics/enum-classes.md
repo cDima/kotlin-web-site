@@ -84,6 +84,7 @@ of these methods are as follows (assuming the name of the enum class is `EnumCla
 
 ```kotlin
 EnumClass.valueOf(value: String): EnumClass
+EnumClass.entries: EnumEntries<EnumClass>
 EnumClass.values(): Array<EnumClass>
 ```
 
@@ -93,11 +94,11 @@ Below is an example of these methods in action:
 enum class RGB { RED, GREEN, BLUE }
 
 fun main() {
-    for (color in RGB.values()) println(color.toString()) // prints RED, GREEN, BLUE
+    for (color in RGB.entries) println(color.toString()) // prints RED, GREEN, BLUE
     println("The first color is: ${RGB.valueOf("RED")}") // prints "The first color is: RED"
 }
 ```
-{kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="rgb-enums-kotlin"}
+{kotlin-runnable="true" kotlin-min-compiler-version="1.9" id="rgb-enums-kotlin"}
 
 The `valueOf()` method throws an `IllegalArgumentException` if the specified name does
 not match any of the enum constants defined in the class.
